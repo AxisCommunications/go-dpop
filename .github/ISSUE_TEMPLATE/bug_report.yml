@@ -1,0 +1,57 @@
+name: Bug report
+description: File a bug report
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      value: "A bug happened!"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Steps to reproduce the behavior"
+      description: Your bug has a higher chance of being fixed if it can be reproduced by others. Therefore, it's very good to try to create a minimum setup that displays the erroneous behaviour (e.g. create a failing unit test, etc...)
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      description: What OS are you seeing the bug on?
+      multiple: true
+      options:
+        - Windows
+        - Linux
+        - macOS
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: sh
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Notes
+      description: Add any other context about the problem here.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

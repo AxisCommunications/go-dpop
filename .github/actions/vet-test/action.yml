@@ -1,0 +1,13 @@
+name: Vet & Test
+description: Vet and test package
+
+runs:
+  using: composite
+  steps:
+    - name: Vet
+      shell: bash
+      run: go vet ./...
+
+    - name: Test
+      shell: bash
+      run: go test ./...
