@@ -24,7 +24,7 @@ An authorization server needs to parse the incoming proof in order to associate 
 It should parse the proof to ensure that the sender of the proof has access to the private key.
 
 ```go
-import dpop "github.com/AxisCommunications/go-dpop"
+import "github.com/AxisCommunications/go-dpop"
 
 proof, err := dpop.Parse(proofString, dpop.POST, &httpUrl, dpop.ParseOptions{
     Nonce:      "",
@@ -48,7 +48,7 @@ jkt := proof.PublicKey()
 Resource servers need to do the same proof validation that authorization servers do but also check that the proof and access token are bound correctly.
 
 ```go
-import dpop "github.com/AxisCommunications/go-dpop"
+import "github.com/AxisCommunications/go-dpop"
 
 proof, err := dpop.Parse(proofString, dpop.POST, &httpUrl, dpop.ParseOptions{
     Nonce:      "",
@@ -84,7 +84,7 @@ if err != nil {
 A client can generate proofs that authorization and resource servers can validate.
 
 ```go
-import dpop "github.com/AxisCommunications/go-dpop"
+import "github.com/AxisCommunications/go-dpop"
 
 // Setup the claims of the proof
 claims := &dpop.ProofTokenClaims{
