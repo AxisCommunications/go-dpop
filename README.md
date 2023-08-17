@@ -1,5 +1,8 @@
 # go-dpop
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/AxisCommunications/go-dpop.svg)](https://pkg.go.dev/github.com/AxisCommunications/go-dpop)
+[![Coverage Status](https://badge.coveralls.io/repos/github/AxisCommunications/go-dpop/badge.svg?branch=main)](https://badge.coveralls.io/github/AxisCommunications/go-dpop?branch=main)
+
 OAuth 2.0 Demonstration of Proof-of-Possession at the Application Layer (DPoP)
 
 This package tries to implement the current DPoP draft from IETF
