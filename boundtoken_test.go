@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	dpop "github.com/AxisCommunications/go-dpop"
+	"github.com/AxisCommunications/go-dpop"
 )
 
 // Test that the BoundAccessTokenClaims type is correctly implemented

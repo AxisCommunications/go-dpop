@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	dpop "github.com/AxisCommunications/go-dpop"
+	"github.com/AxisCommunications/go-dpop"
 )
 
 // All proofs used in tests have been generated through the use of <https://github.com/panva/dpop>

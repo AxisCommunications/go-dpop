@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	dpop "github.com/AxisCommunications/go-dpop"
+	"github.com/AxisCommunications/go-dpop"
 )
 
 // Helper function to control types of joined errors.

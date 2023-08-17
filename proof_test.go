@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	dpop "github.com/AxisCommunications/go-dpop"
+	"github.com/AxisCommunications/go-dpop"
 	"github.com/golang-jwt/jwt/v5"
 )
 
