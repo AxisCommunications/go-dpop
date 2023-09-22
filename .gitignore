@@ -22,3 +22,6 @@ go.work
 
 # Visual Studio Code workspace settings
 .vscode/
+
+# Example binaries
+build/

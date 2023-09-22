@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "**.go"
+      - "*.go"
 
 jobs:
   vet-and-test:
