@@ -32,7 +32,7 @@ proof, err := dpop.Parse(proofString, dpop.POST, &httpUrl, dpop.ParseOptions{
   })
 // Check the error type to determine response
 if err != nil {
-  if ok := errors.Is(dpop.ErrInvalidProof); ok {
+  if ok := errors.Is(err, dpop.ErrInvalidProof); ok {
     // Return 'invalid_dpop_proof'
   }
 }
@@ -56,7 +56,7 @@ proof, err := dpop.Parse(proofString, dpop.POST, &httpUrl, dpop.ParseOptions{
   })
 // Check the error type to determine response
 if err != nil {
-  if ok := errors.Is(dpop.ErrInvalidProof); ok {
+  if ok := errors.Is(err, dpop.ErrInvalidProof); ok {
     // Return 'invalid_dpop_proof'
   }
 }
@@ -68,10 +68,10 @@ if err != nil {
 err = proof.Validate(accessTokenHash, accessTokenJWT)
 // Check the error type to determine response
 if err != nil {
-  if ok := errors.Is(dpop.ErrInvalidProof); ok {
+  if ok := errors.Is(err, dpop.ErrInvalidProof); ok {
     // Return 'invalid_dpop_proof'
   }
-  if ok := errors.Is(dpop.ErrIncorrectAccessTokenClaimsType); ok {
+  if ok := errors.Is(err, dpop.ErrIncorrectAccessTokenClaimsType); ok {
     // Return 'invalid_token'
   }
 }
