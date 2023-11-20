@@ -22,6 +22,8 @@ func ValidateHashFunction(args ...crypto.Hash) (*crypto.Hash, error) {
 	return &hashFn, nil
 }
 
+// Utility function to provide a default hashing utility
+// for users to ensure hash values of claims match
 func HashUtil(inString string, args ...crypto.Hash) (string, error) {
 	hashFn, err := ValidateHashFunction(args...)
 	if err != nil {
@@ -39,6 +41,8 @@ func HashUtil(inString string, args ...crypto.Hash) (string, error) {
 	return hex.EncodeToString(resultingHash), nil
 }
 
+// Utility function to test the hashing value of an input strng
+// against a provided encrypted string
 func HashEquals(inString string, encryptedString string, args ...crypto.Hash) (bool, error) {
 	hashedInString, err :=  HashUtil(inString, args...)
 	if err != nil {
