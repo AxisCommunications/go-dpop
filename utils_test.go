@@ -11,34 +11,14 @@ import (
 const (
 	// Arrange
 	inString = "testString"
-	encryptedString = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	encryptedString = "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
 )
 
-func TestHashEq_TooManyArgs(t *testing.T) {
-	
-	// Act
-	_, err := dpop.HashEquals(inString, encryptedString, crypto.Hash(crypto.SHA224), crypto.Hash(crypto.SHA3_384))
-
-	// Assert
-	if err != dpop.ErrTooManyArgs {
-		t.Errorf("wanted %e, got %e", dpop.ErrTooManyArgs, err)
-	}
-}
-
-// func TestHashEq_NoArgs(t *testing.T) {
-// 	// Act
-// 	got, _ := dpop.HashEquals(inString, encryptedString)
-
-// 	// Assert
-// 	if got != true {
-// 		t.Errorf("wanted %t, got %t", true, got)
-// 	}
-// }
 
 func TestHashEq_CustomCryptoArg(t *testing.T) {
 	// Arrange
-	// outString := `38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b`
-	outString := `MzhiMDYwYTc1MWFjOTYzODRjZDkzMjdlYjFiMWUzNmEyMWZkYjcxMTE0YmUwNzQzNGMwY2M3YmY2M2Y2ZTFkYTI3NGVkZWJmZTc2ZjY1ZmJkNTFhZDJmMTQ4OThiOTVi`
+	outString := `fvH592-VGGsVowC30cXqp7JYgkuxlPteYVbMtmbJPx6TPnhMJnpxed8oO4glEyY0`
+	
 	// Act
 	got, _ := dpop.HashEquals(inString, outString, crypto.SHA384)
 
@@ -59,4 +39,47 @@ func TestHashEq_IncorrectEncryptedString(t *testing.T) {
 	if got != false {
 		t.Errorf("wanted %t, got %t", false, got)
 	}
+}
+
+
+func TestValidateHashFunction_TooManyArgs(t *testing.T) {
+	// Arrange
+	want := dpop.ErrTooManyArgs
+	
+	// Act
+	_, err := dpop.ValidateHashFunction(crypto.SHA256, crypto.SHA384)
+
+	if err != want {
+		t.Errorf("wanted %e, got %e", want, err)
+	}
+}
+
+func TestValidateHashFunction_NoArgs(t *testing.T) {
+	// Arrange
+	want := new(crypto.Hash)
+	*want = crypto.SHA256
+
+	// Act
+	got, _ := dpop.ValidateHashFunction()
+
+	// Assert
+	if *got != *want {
+		t.Errorf("wanted %+v, got %+v", *want, *got)
+	}
+}
+
+func TestValidateHashFunction_OneArgs(t *testing.T) {
+
+	// Arrange
+	want := new(crypto.Hash)
+	*want = crypto.SHA384
+
+	// Act
+	got, _ := dpop.ValidateHashFunction(crypto.SHA384)
+
+	// Assert
+	if *got != *want {
+		t.Errorf("wanted %+v, got %+v", *want, *got)
+	}
+
 }
