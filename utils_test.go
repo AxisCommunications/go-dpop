@@ -60,14 +60,3 @@ func TestHashEq_IncorrectEncryptedString(t *testing.T) {
 	}
 }
 
-// func TestHashEq_AlgNotAvailable(t *testing.T) {
-	
-// 	crypto.RegisterHash(99, dpop.NewMockHash)
-// 	// Act
-// 	_, err := dpop.HashEquals(inString, encryptedString, 99)
-
-// 	if err != dpop.ErrHashFnNotAvailable {
-// 		t.Errorf("wanted %e, got %e", dpop.ErrHashFnNotAvailable, err)
-// 	}
-// }
-
