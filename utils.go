@@ -5,17 +5,27 @@ import (
 	"encoding/hex"
 )
 
-func hashUtil(inString string, args ...crypto.Hash) (string, error) {
+// Internal function used to ensure hash is available and set the default
+// to SHA256
+func ValidateHashFunction(args ...crypto.Hash) (*crypto.Hash, error) {
 	var hashFn crypto.Hash
 	if len(args) > 1 {
-		return "", ErrTooManyArgs
+		return nil, ErrTooManyArgs
 	} else if len(args) < 1 {
 		hashFn = crypto.SHA256
 	} else {
 		hashFn = args[0]
 	}
 	if !hashFn.Available() {
-		return "", ErrHashFnNotAvailable
+		return nil, ErrHashFnNotAvailable
+	}
+	return &hashFn, nil
+}
+
+func HashUtil(inString string, args ...crypto.Hash) (string, error) {
+	hashFn, err := ValidateHashFunction(args...)
+	if err != nil {
+		return "", err
 	}
 	hashFnInst := hashFn.HashFunc().New()
 	// helped me here https://forum.golangbridge.org/t/help-with-sha256-code-solved/8210/4
@@ -30,6 +40,9 @@ func hashUtil(inString string, args ...crypto.Hash) (string, error) {
 }
 
 func HashEquals(inString string, encryptedString string, args ...crypto.Hash) (bool, error) {
-	
-	return (encryptedString == out), nil
+	hashedInString, err :=  HashUtil(inString, args...)
+	if err != nil {
+		return false, err
+	}
+	return (encryptedString == hashedInString), nil
 }
