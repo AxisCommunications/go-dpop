@@ -8,18 +8,18 @@ import (
 // Internal function used to ensure hash is available and set the default
 // to SHA256
 func ValidateHashFunction(args ...crypto.Hash) (*crypto.Hash, error) {
-	var hashFn crypto.Hash
+	var hashFn *crypto.Hash
 	if len(args) > 1 {
 		return nil, ErrTooManyArgs
 	} else if len(args) < 1 {
-		hashFn = crypto.SHA256
+		*hashFn = crypto.SHA256
 	} else {
-		hashFn = args[0]
+		*hashFn = args[0]
 	}
 	if !hashFn.Available() {
 		return nil, ErrHashFnNotAvailable
 	}
-	return &hashFn, nil
+	return hashFn, nil
 }
 
 // Utility function to provide a default hashing utility
@@ -30,7 +30,7 @@ func HashUtil(inString string, args ...crypto.Hash) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hashFnInst := hashFn.HashFunc().New()
+	hashFnInst := (*hashFn).HashFunc().New()
 	// helped me here https://forum.golangbridge.org/t/help-with-sha256-code-solved/8210/4
 	firstBytes, err := base64.RawURLEncoding.DecodeString(inString)
 	if err != nil {
