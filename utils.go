@@ -8,7 +8,7 @@ import (
 // Internal function used to ensure hash is available and set the default
 // to SHA256
 func ValidateHashFunction(args ...crypto.Hash) (*crypto.Hash, error) {
-	var hashFn *crypto.Hash
+	hashFn := new(crypto.Hash)
 	if len(args) > 1 {
 		return nil, ErrTooManyArgs
 	} else if len(args) < 1 {
