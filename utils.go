@@ -3,6 +3,8 @@ package dpop
 import (
 	"crypto"
 	"encoding/base64"
+	"net/url"
+	"strings"
 )
 
 // Internal function used to ensure hash is available and set the default
@@ -50,4 +52,14 @@ func HashEquals(inString string, encryptedString string, args ...crypto.Hash) (b
 		return false, err
 	}
 	return (encryptedString == hashedInString), nil
+}
+
+// Utility function to strip path and query fragments from httpURL
+// to satisfy DPoP `htu` claim matching requirement
+func StripQueryAndFragments(httpURL *url.URL) string {
+	if strings.Contains(httpURL.String(), "?") {
+		splitUrl := httpURL.String()[:strings.Index(httpURL.String(), "?")]
+		return splitUrl
+	} 
+	return httpURL.String()
 }

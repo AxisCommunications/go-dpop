@@ -243,6 +243,33 @@ func TestParse_IncorrectHtu(t *testing.T) {
 	}
 }
 
+func TestParse_CorrectHttpURLWithQueryFragments(t *testing.T) {
+	// Arrange
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host:   "server.example.com",
+		Path:   "/token",
+		Fragment: "#fragment",
+		RawQuery: "foo=bar",
+	}
+	duration := time.Duration(438000) * time.Hour
+	opts := dpop.ParseOptions{
+		Nonce:      "",
+		TimeWindow: &duration,
+	}
+
+	// Act
+	proof, err := dpop.Parse(validES256_proof, dpop.POST, &httpUrl, opts)
+
+	// Assert
+	if err != nil {
+		t.Errorf("wanted nil, got %e", err)
+	}
+	if proof == nil || proof.Valid != true {
+		t.Errorf("Expected token to be valid")
+	}
+}
+
 // Test that expired proof is rejected
 func TestParse_ExpiredProof(t *testing.T) {
 	// Arrange
