@@ -11,11 +11,10 @@ import (
 const (
 	// Arrange
 	inString = "testString"
-	encryptedString = "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
 )
 
 
-func TestHashEq_CustomCryptoArg(t *testing.T) {
+func TestHashEquals_CustomCryptoArg(t *testing.T) {
 	// Arrange
 	outString := `fvH592-VGGsVowC30cXqp7JYgkuxlPteYVbMtmbJPx6TPnhMJnpxed8oO4glEyY0`
 	
@@ -28,7 +27,7 @@ func TestHashEq_CustomCryptoArg(t *testing.T) {
 	}
 }
 
-func TestHashEq_IncorrectEncryptedString(t *testing.T) {
+func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	// Arrange
 	outString := "this is definitely wrong : )"
 
@@ -49,6 +48,7 @@ func TestValidateHashFunction_TooManyArgs(t *testing.T) {
 	// Act
 	_, err := dpop.ValidateHashFunction(crypto.SHA256, crypto.SHA384)
 
+	// Assert
 	if err != want {
 		t.Errorf("wanted %e, got %e", want, err)
 	}
@@ -82,4 +82,30 @@ func TestValidateHashFunction_OneArgs(t *testing.T) {
 		t.Errorf("wanted %+v, got %+v", *want, *got)
 	}
 
+}
+
+func TestHashUtil_BadInputString(t *testing.T) {
+	// Arrange
+	malformedString := ``
+	want := dpop.ErrInputMalformed
+
+	// Act
+	_, err := dpop.HashUtil(malformedString)
+
+	// Assert
+	if want != err {
+		t.Errorf("wanted %e, got %e", want, err)
+	}
+}
+
+func TestHashUtil_CorrectOutput(t *testing.T) {
+	// Arrange
+	want := "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
+	
+	// Act
+	got, _ := dpop.HashUtil(inString)
+
+	if got != want {
+		t.Errorf("wanted %s, got %s", want, got)
+	}
 }
