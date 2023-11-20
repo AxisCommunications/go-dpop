@@ -57,9 +57,16 @@ func HashEquals(inString string, encryptedString string, args ...crypto.Hash) (b
 // Utility function to strip path and query fragments from httpURL
 // to satisfy DPoP `htu` claim matching requirement
 func StripQueryAndFragments(httpURL *url.URL) string {
+	// Check for query parameters first, that will also remove fragments
 	if strings.Contains(httpURL.String(), "?") {
 		splitUrl := httpURL.String()[:strings.Index(httpURL.String(), "?")]
 		return splitUrl
 	} 
+	// Check if there are just fragments in the Url
+	// This is rare but can happen
+	if strings.Contains(httpURL.String(), "#") {
+		splitUrl := httpURL.String()[:strings.Index(httpURL.String(), "#")]
+		return splitUrl
+	}
 	return httpURL.String()
 }

@@ -2,6 +2,7 @@ package dpop_test
 
 import (
 	"crypto"
+	"net/url"
 	"testing"
 
 	"github.com/AxisCommunications/go-dpop"
@@ -108,4 +109,76 @@ func TestHashUtil_CorrectOutput(t *testing.T) {
 	if got != want {
 		t.Errorf("wanted %s, got %s", want, got)
 	}
+}
+
+func TestStripQueryAndFragments_NoQuery(t *testing.T) {
+	// Arrange
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host: "server.com",
+		Path: "/path",
+		Fragment: "#fragment",
+	}
+	want := "https://server.com/path"
+
+	// Act
+	got := dpop.StripQueryAndFragments(&httpUrl)
+
+	if got != want {
+		t.Errorf("wanted %s, got %s", want, got)
+	}
+}
+
+func TestStripQueryAndFragments_NoFragments(t *testing.T) {
+	// Arrange
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host: "server.com",
+		Path: "/path",
+		RawQuery: "foo=bar",
+	}
+	want := "https://server.com/path"
+
+	// Act
+	got := dpop.StripQueryAndFragments(&httpUrl)
+
+	if got != want {
+		t.Errorf("wanted %s, got %s", want, got)
+	}
+}
+
+func TestStripQueryAndFragments_QueryAndFragments(t *testing.T) {
+	// Arrange
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host: "server.com",
+		Path: "/path",
+		RawQuery: "foo=bar",
+		Fragment: "#fragment",
+	}
+	want := "https://server.com/path"
+
+	// Act
+	got := dpop.StripQueryAndFragments(&httpUrl)
+
+	if got != want {
+		t.Errorf("wanted %s, got %s", want, got)
+	}	
+}
+
+func TestStripQueryAndFragments_BaseURL(t *testing.T) {
+	// Arrange
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host: "server.com",
+		Path: "/path",
+	}
+	want := "https://server.com/path"
+
+	// Act
+	got := dpop.StripQueryAndFragments(&httpUrl)
+
+	if got != want {
+		t.Errorf("wanted %s, got %s", want, got)
+	}		
 }
