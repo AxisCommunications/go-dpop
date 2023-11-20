@@ -28,6 +28,14 @@ var (
 	// The proof is issued too far into the future.
 	ErrFuture = errors.New("proof is issued too far into the future")
 
+	// The hash function is not available
+	ErrHashFnNotAvailable = errors.New("provided hash function is not available, please check binaries and linker")
+
+	// When using hash util func, errors 
+	// if more than one hash is provided in variadic args
+	ErrTooManyArgs = errors.New("too many arguments for function")
+
+
 	// The proof claims are not of correct type
 	ErrIncorrectClaimsType = errors.New("incorrect claims type")
 

@@ -3,7 +3,6 @@ package dpop
 import (
 	"crypto"
 	"encoding/hex"
-	"errors"
 )
 
 // type MockHash struct {}
@@ -37,14 +36,14 @@ import (
 func HashEquals(inString string, encryptedString string, args ...crypto.Hash) (bool, error) {
 	var hashFn crypto.Hash
 	if len(args) > 1 {
-		return false, errors.New("too many arguments")
+		return false, ErrTooManyArgs
 	} else if len(args) < 1 {
 		hashFn = crypto.SHA256
 	} else {
 		hashFn = args[0]
 	}
 	if !hashFn.Available() {
-		return false, errors.New("hash fn not available")
+		return false, ErrHashFnNotAvailable
 	}
 	hashFnInst := hashFn.HashFunc().New()
 	// helped me here https://forum.golangbridge.org/t/help-with-sha256-code-solved/8210/4
