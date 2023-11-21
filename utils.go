@@ -19,6 +19,14 @@ type HashInput struct {
 	hashFn	 crypto.Hash
 }
 
+func (h *HashInput) New(inString string) *HashInput {
+	return &HashInput{inString, crypto.SHA256,}
+}
+
+func (h *HashInput) SetHashFn(hashFn crypto.Hash) {
+	h.hashFn = hashFn
+}
+
 // Utility function to provide a default hashing utility
 // for users to ensure hash values of claims match
 // base64url-safe format

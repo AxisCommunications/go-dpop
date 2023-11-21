@@ -17,9 +17,11 @@ const (
 func TestHashEquals_CustomCryptoArg(t *testing.T) {
 	// Arrange
 	outString := `fvH592-VGGsVowC30cXqp7JYgkuxlPteYVbMtmbJPx6TPnhMJnpxed8oO4glEyY0`
-	
+	input := new(dpop.HashInput).New(inString)
+	input.SetHashFn(crypto.SHA384)
+
 	// Act
-	got, _ := dpop.HashEquals(inString, outString, crypto.SHA384)
+	got, _ := dpop.HashEquals(*input, outString)
 
 	// Assert
 	if got != true {
@@ -30,9 +32,10 @@ func TestHashEquals_CustomCryptoArg(t *testing.T) {
 func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	// Arrange
 	outString := "this is definitely wrong : )"
-
+	input := new(dpop.HashInput).New(inString)
+	
 	// Act
-	got, _ := dpop.HashEquals(inString, outString)
+	got, _ := dpop.HashEquals(*input, outString)
 
 	// Assert
 	if got != false {
@@ -41,45 +44,30 @@ func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 }
 
 
-func TestValidateHashFunction_TooManyArgs(t *testing.T) {
-	// Arrange
-	want := dpop.ErrTooManyArgs
-	
-	// Act
-	_, err := dpop.ValidateHashFunction(crypto.SHA256, crypto.SHA384)
-
-	// Assert
-	if err != want {
-		t.Errorf("wanted %e, got %e", want, err)
-	}
-}
-
 func TestValidateHashFunction_NoArgs(t *testing.T) {
 	// Arrange
-	want := new(crypto.Hash)
-	*want = crypto.SHA256
+	want := crypto.SHA256
 
 	// Act
-	got, _ := dpop.ValidateHashFunction()
+	got := dpop.ValidateHashFunction(crypto.SHA256)
 
 	// Assert
-	if *got != *want {
-		t.Errorf("wanted %+v, got %+v", *want, *got)
+	if got != want {
+		t.Errorf("wanted %+v, got %+v", want, got)
 	}
 }
 
 func TestValidateHashFunction_OneArgs(t *testing.T) {
 
 	// Arrange
-	want := new(crypto.Hash)
-	*want = crypto.SHA384
+	want := crypto.SHA384
 
 	// Act
-	got, _ := dpop.ValidateHashFunction(crypto.SHA384)
+	got := dpop.ValidateHashFunction(crypto.SHA384)
 
 	// Assert
-	if *got != *want {
-		t.Errorf("wanted %+v, got %+v", *want, *got)
+	if got != want {
+		t.Errorf("wanted %+v, got %+v", want, got)
 	}
 
 }
@@ -88,9 +76,11 @@ func TestHashUtil_BadInputString(t *testing.T) {
 	// Arrange
 	malformedString := ``
 	want := dpop.ErrInputMalformed
+	input := new(dpop.HashInput).New(malformedString)
+
 
 	// Act
-	_, err := dpop.HashUtil(malformedString)
+	_, err := dpop.HashUtil(*input)
 
 	// Assert
 	if want != err {
@@ -101,9 +91,10 @@ func TestHashUtil_BadInputString(t *testing.T) {
 func TestHashUtil_CorrectOutput(t *testing.T) {
 	// Arrange
 	want := "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
-	
+	input := new(dpop.HashInput).New(inString)
+
 	// Act
-	got, _ := dpop.HashUtil(inString)
+	got, _ := dpop.HashUtil(*input)
 
 	if got != want {
 		t.Errorf("wanted %s, got %s", want, got)
