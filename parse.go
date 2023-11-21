@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"net/url"
 	"strings"
@@ -91,8 +92,7 @@ func Parse(
 	// This satisfies point 8 and 9 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
 	
 	// Addresses https://github.com/AxisCommunications/go-dpop/issues/9
-	httpUrlParsed := strings.Join([]string{httpURL.Scheme, "://", httpURL.Hostname(), httpURL.Path}, "")
-
+	httpUrlParsed := fmt.Sprintf("%s://%s%s", httpURL.Scheme, httpURL.Hostname(), httpURL.Path)
 	if httpMethod != claims.Method || httpUrlParsed != claims.URL {
 		return nil, errors.Join(ErrInvalidProof, ErrIncorrectHTTPTarget)
 	}
