@@ -7,19 +7,11 @@ import (
 
 // Internal function used to ensure hash is available and set the default
 // to SHA256
-func ValidateHashFunction(args ...crypto.Hash) (*crypto.Hash, error) {
-	hashFn := new(crypto.Hash)
-	if len(args) > 1 {
-		return nil, ErrTooManyArgs
-	} else if len(args) < 1 {
-		*hashFn = crypto.SHA256
-	} else {
-		*hashFn = args[0]
+func ValidateHashFunction(hashFn crypto.Hash) crypto.Hash {
+	if hashFn.Available() {
+		return hashFn
 	}
-	if !hashFn.Available() {
-		return nil, ErrHashFnNotAvailable
-	}
-	return hashFn, nil
+	return crypto.SHA256
 }
 
 // Utility function to provide a default hashing utility
