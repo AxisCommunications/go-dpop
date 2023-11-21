@@ -128,13 +128,13 @@ func Parse(
 	if !ok {
 		return nil, ErrMissingJWK
 	}
-	jwkJSON, err := getThumbprintableJwkJSON(jwk)
+	jwkJSONbytes, err := getThumbprintableJwkJSONbytes(jwk)
 	if err != nil {
 		// keyFunc used with parseWithClaims should ensure that this can not happen but better safe than sorry.
 		return nil, errors.Join(ErrInvalidProof, err)
 	}
 	h := sha256.New()
-	_, err = h.Write([]byte(jwkJSON))
+	_, err = h.Write(jwkJSONbytes)
 	if err != nil {
 		return nil, errors.Join(ErrInvalidProof, err)
 	}
@@ -201,9 +201,9 @@ func parseJwk(jwkMap map[string]interface{}) (interface{}, error) {
 		}
 
 		return &ecdsa.PublicKey{
-			Curve: curve,
 			X:     big.NewInt(0).SetBytes(xCoordinate),
 			Y:     big.NewInt(0).SetBytes(yCoordinate),
+			Curve: curve,
 		}, nil
 	case "RSA":
 		// Decode the exponent and modulus from Base64.
@@ -252,11 +252,48 @@ func base64urlTrailingPadding(s string) ([]byte, error) {
 
 // Strips eventual optional members of a JWK in order to be able to compute the thumbprint of it
 // https://datatracker.ietf.org/doc/html/rfc7638#section-3.2
-func getThumbprintableJwkJSON(jwk map[string]interface{}) (string, error) {
+func getThumbprintableJwkJSONbytes(jwk map[string]interface{}) ([]byte, error) {
 	minimalJwk, err := parseJwk(jwk)
-	jwkHeaderJSON, err := json.Marshal(minimalJwk)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(jwkHeaderJSON), nil
+	jwkHeaderJSONbytes, err := getKeyStringRepresentation(minimalJwk)
+	if err != nil {
+		return nil, err
+	}
+	return jwkHeaderJSONbytes, nil
+}
+
+func getKeyStringRepresentation(key interface{}) ([]byte, error) {
+	var keyParts interface{}
+	switch key.(type) {
+	case *ecdsa.PublicKey:
+		ecdsaKey := key.(*ecdsa.PublicKey)
+		keyParts = map[string]interface{}{
+			"kty": "EC",
+			"crv": ecdsaKey.Curve.Params().Name,
+			"x":   base64.RawURLEncoding.EncodeToString(ecdsaKey.X.Bytes()),
+			"y":   base64.RawURLEncoding.EncodeToString(ecdsaKey.Y.Bytes()),
+		}
+		break
+	case *rsa.PublicKey:
+		rsaKey := key.(*rsa.PublicKey)
+		keyParts = map[string]interface{}{
+			"kty": "RSA",
+			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(rsaKey.E)).Bytes()),
+			"n":   base64.RawURLEncoding.EncodeToString(rsaKey.N.Bytes()),
+		}
+		break
+	case ed25519.PublicKey:
+		keyParts = map[string]interface{}{
+			"kty": "OKP",
+			"crv": "Ed25519",
+			"x":   base64.RawURLEncoding.EncodeToString(key.(ed25519.PublicKey)),
+		}
+		break
+	default:
+		return nil, ErrUnsupportedKeyAlgorithm
+	}
+	marshalledKey, err := json.Marshal(keyParts)
+	return marshalledKey, err
 }
