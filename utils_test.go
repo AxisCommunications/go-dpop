@@ -43,7 +43,6 @@ func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	}
 }
 
-
 func TestValidateHashFunction_NoArgs(t *testing.T) {
 	// Arrange
 	want := crypto.SHA256

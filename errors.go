@@ -34,10 +34,6 @@ var (
 	// Input string was malformed, and could not be decoded
 	ErrInputMalformed = errors.New("input string was malformed, could not be decoded")
 
-	// When using hash util func, errors 
-	// if more than one hash is provided in variadic args
-	ErrTooManyArgs = errors.New("too many arguments for function")
-
 	// The proof claims are not of correct type
 	ErrIncorrectClaimsType = errors.New("incorrect claims type")
 
