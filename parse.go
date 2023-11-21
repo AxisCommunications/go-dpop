@@ -257,13 +257,14 @@ func getThumbprintableJwkJSONbytes(jwk map[string]interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	jwkHeaderJSONbytes, err := getKeyStringRepresentation(minimalJwk)
+	jwkHeaderJSONBytes, err := getKeyStringRepresentation(minimalJwk)
 	if err != nil {
 		return nil, err
 	}
-	return jwkHeaderJSONbytes, nil
+	return jwkHeaderJSONBytes, nil
 }
 
+// Returns the string representation of a key in JSON format.
 func getKeyStringRepresentation(key interface{}) ([]byte, error) {
 	var keyParts interface{}
 	switch key.(type) {
