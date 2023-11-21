@@ -267,29 +267,27 @@ func getThumbprintableJwkJSONbytes(jwk map[string]interface{}) ([]byte, error) {
 // Returns the string representation of a key in JSON format.
 func getKeyStringRepresentation(key interface{}) ([]byte, error) {
 	var keyParts interface{}
-	switch key.(type) {
+	switch currentKey := key.(type) {
 	case *ecdsa.PublicKey:
-		ecdsaKey := key.(*ecdsa.PublicKey)
 		keyParts = map[string]interface{}{
 			"kty": "EC",
-			"crv": ecdsaKey.Curve.Params().Name,
-			"x":   base64.RawURLEncoding.EncodeToString(ecdsaKey.X.Bytes()),
-			"y":   base64.RawURLEncoding.EncodeToString(ecdsaKey.Y.Bytes()),
+			"crv": currentKey.Curve.Params().Name,
+			"x":   base64.RawURLEncoding.EncodeToString(currentKey.X.Bytes()),
+			"y":   base64.RawURLEncoding.EncodeToString(currentKey.Y.Bytes()),
 		}
 		break
 	case *rsa.PublicKey:
-		rsaKey := key.(*rsa.PublicKey)
 		keyParts = map[string]interface{}{
 			"kty": "RSA",
-			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(rsaKey.E)).Bytes()),
-			"n":   base64.RawURLEncoding.EncodeToString(rsaKey.N.Bytes()),
+			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(currentKey.E)).Bytes()),
+			"n":   base64.RawURLEncoding.EncodeToString(currentKey.N.Bytes()),
 		}
 		break
 	case ed25519.PublicKey:
 		keyParts = map[string]interface{}{
 			"kty": "OKP",
 			"crv": "Ed25519",
-			"x":   base64.RawURLEncoding.EncodeToString(key.(ed25519.PublicKey)),
+			"x":   base64.RawURLEncoding.EncodeToString(currentKey),
 		}
 		break
 	default:
