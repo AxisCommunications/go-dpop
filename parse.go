@@ -65,8 +65,8 @@ func Parse(
 	opts ParseOptions,
 ) (*Proof, error) {
 	// Parse the token string
-	// Ensure that it is a wellformed JWT, that a supported signature algorithm is used,
-	// that it conatins a public key, and that the signature verifies with the public key.
+	// Ensure that it is a well-formed JWT, that a supported signature algorithm is used,
+	// that it contains a public key, and that the signature verifies with the public key.
 	// This satisfies point 2, 5, 6 and 7 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
 	var claims ProofTokenClaims
 	dpopToken, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc)
@@ -124,13 +124,17 @@ func Parse(
 	// Extract the public key from the proof and hash it.
 	// This is done in order to store the public key
 	// without the need for extracting and hashing it again.
-	jwkHeaderJSON, err := json.Marshal(dpopToken.Header["jwk"])
+	jwk, ok := dpopToken.Header["jwk"].(map[string]interface{})
+	if !ok {
+		return nil, ErrMissingJWK
+	}
+	jwkJSON, err := getThumbprintableJwkJSON(jwk)
 	if err != nil {
 		// keyFunc used with parseWithClaims should ensure that this can not happen but better safe than sorry.
 		return nil, errors.Join(ErrInvalidProof, err)
 	}
 	h := sha256.New()
-	_, err = h.Write([]byte(jwkHeaderJSON))
+	_, err = h.Write([]byte(jwkJSON))
 	if err != nil {
 		return nil, errors.Join(ErrInvalidProof, err)
 	}
@@ -163,6 +167,11 @@ func keyFunc(t *jwt.Token) (interface{}, error) {
 		return nil, ErrMissingJWK
 	}
 
+	return parseJwk(jwkMap)
+}
+
+// Parses a JWK and inherently strips it of optional fields
+func parseJwk(jwkMap map[string]interface{}) (interface{}, error) {
 	switch jwkMap["kty"].(string) {
 	case "EC":
 		// Decode the coordinates from Base64.
@@ -239,4 +248,15 @@ func keyFunc(t *jwt.Token) (interface{}, error) {
 func base64urlTrailingPadding(s string) ([]byte, error) {
 	s = strings.TrimRight(s, "=")
 	return base64.RawURLEncoding.DecodeString(s)
+}
+
+// Strips eventual optional members of a JWK in order to be able to compute the thumbprint of it
+// https://datatracker.ietf.org/doc/html/rfc7638#section-3.2
+func getThumbprintableJwkJSON(jwk map[string]interface{}) (string, error) {
+	minimalJwk, err := parseJwk(jwk)
+	jwkHeaderJSON, err := json.Marshal(minimalJwk)
+	if err != nil {
+		return "", err
+	}
+	return string(jwkHeaderJSON), nil
 }

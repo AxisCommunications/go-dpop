@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	// Create a DPoP proof token in order to request a bound token from the autorization server
+	// Create a DPoP proof token in order to request a bound token from the authorization server
 	claims := dpop.ProofTokenClaims{
 		RegisteredClaims: &jwt.RegisteredClaims{
 			Issuer:    "client",
@@ -46,7 +46,7 @@ func main() {
 		panic(err)
 	}
 
-	// Request a bound token from the autorization server
+	// Request a bound token from the authorization server
 	fmt.Println("Client - requesting a bound token from the authorization server")
 	body := tokenRequestBody{
 		Resource: "https://server.example.com/resource",
