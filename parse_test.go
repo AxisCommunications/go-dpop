@@ -243,8 +243,8 @@ func TestParse_IncorrectHtu(t *testing.T) {
 	}
 }
 
-// Test that an htu claim without query or fragments is properly validated
-// according to DPoP spec
+// Test that an htu claim with query or fragments is properly parsed
+// and passes validation according to DPoP spec
 func TestParse_CorrectHttpURLWithQueryFragments(t *testing.T) {
 	// Arrange
 	httpUrl := url.URL{
