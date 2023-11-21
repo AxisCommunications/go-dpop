@@ -89,9 +89,9 @@ func Parse(
 
 	// Check that `htm` and `htu` claims match the HTTP method and URL of the current request.
 	// This satisfies point 8 and 9 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
-	httpUrlNoExtras := StripQueryAndFragments(httpURL)
-	
-	if httpMethod != claims.Method || httpUrlNoExtras != claims.URL {
+	httpUrlParsed := strings.Join([]string{httpURL.Scheme, "://", httpURL.Hostname(), httpURL.Path}, "")
+
+	if httpMethod != claims.Method || httpUrlParsed != claims.URL {
 		return nil, errors.Join(ErrInvalidProof, ErrIncorrectHTTPTarget)
 	}
 
