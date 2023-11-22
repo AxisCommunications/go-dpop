@@ -5,6 +5,14 @@ import (
 	"encoding/base64"
 )
 
+// Structure which bundles a string to be hashed
+// with the associated hash function
+// Used in utils library to ensure hash function is available to user
+type HashInput struct {
+	inString string
+	hashFn	 crypto.Hash
+}
+
 // Internal function used to ensure hash is available and set the default
 // to SHA256
 func ValidateHashFunction(hashFn crypto.Hash) crypto.Hash {
@@ -12,19 +20,6 @@ func ValidateHashFunction(hashFn crypto.Hash) crypto.Hash {
 		return hashFn
 	}
 	return crypto.SHA256
-}
-
-type HashInput struct {
-	inString string
-	hashFn	 crypto.Hash
-}
-
-func (h *HashInput) New(inString string) *HashInput {
-	return &HashInput{inString, crypto.SHA256,}
-}
-
-func (h *HashInput) SetHashFn(hashFn crypto.Hash) {
-	h.hashFn = hashFn
 }
 
 // Utility function to provide a default hashing utility
