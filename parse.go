@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"net/url"
 	"strings"
@@ -89,7 +90,10 @@ func Parse(
 
 	// Check that `htm` and `htu` claims match the HTTP method and URL of the current request.
 	// This satisfies point 8 and 9 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
-	if httpMethod != claims.Method || httpURL.String() != claims.URL {
+	
+	// Addresses https://github.com/AxisCommunications/go-dpop/issues/9
+	httpUrlParsed := fmt.Sprintf("%s://%s%s", httpURL.Scheme, httpURL.Hostname(), httpURL.Path)
+	if httpMethod != claims.Method || httpUrlParsed != claims.URL {
 		return nil, errors.Join(ErrInvalidProof, ErrIncorrectHTTPTarget)
 	}
 
