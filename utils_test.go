@@ -14,6 +14,7 @@ const (
 )
 
 
+// Test that providing a different crypto algorithm passes
 func TestHashEquals_CustomCryptoArg(t *testing.T) {
 	// Arrange
 	outString := `fvH592-VGGsVowC30cXqp7JYgkuxlPteYVbMtmbJPx6TPnhMJnpxed8oO4glEyY0`
@@ -29,11 +30,11 @@ func TestHashEquals_CustomCryptoArg(t *testing.T) {
 	}
 }
 
+// Test an incorrect encryption string throws an error on failed match
 func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	// Arrange
 	outString := "this is definitely wrong : )"
 	input := &dpop.HashInput{}
-	input.HashFn = crypto.SHA256
 	input.InString = inString
 	
 	// Act
@@ -45,14 +46,13 @@ func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	}
 }
 
-
+// Test a malformed string throws an error
 func TestHashUtil_BadInputString(t *testing.T) {
 	// Arrange
 	malformedString := ``
 	want := dpop.ErrInputMalformed
 	input := &dpop.HashInput{}
 	input.InString = malformedString
-	input.HashFn = crypto.SHA256
 
 	// Act
 	_, err := dpop.HashUtil(input)
@@ -63,15 +63,34 @@ func TestHashUtil_BadInputString(t *testing.T) {
 	}
 }
 
+// Test to demonstrate correct usage of  HashUtil func
 func TestHashUtil_CorrectOutput(t *testing.T) {
 	// Arrange
 	want := "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
 	input := &dpop.HashInput{}
 	input.InString = inString
-	input.HashFn = crypto.SHA256
+	
 	// Act
 	got, _ := dpop.HashUtil(input)
 
+	// Assert
+	if got != want {
+		t.Errorf("wanted %s, got %s", want, got)
+	}
+}
+
+// Test to determine the internal validateHashFunction sets the 
+// structure's hashFn field if there is none set
+func TestInternalValidate_SetsHash(t *testing.T) {
+	// Arrange
+	want := "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
+	input := &dpop.HashInput{}
+	input.InString = inString
+	
+	// Act
+	got, _ := dpop.HashUtil(input)
+
+	// Assert
 	if got != want {
 		t.Errorf("wanted %s, got %s", want, got)
 	}
