@@ -9,16 +9,17 @@ import (
 // with the associated hash function
 // Used in utils library to ensure hash function is available to user
 type HashInput struct {
-	inString string
-	hashFn	 crypto.Hash
+	InString string
+	HashFn	 crypto.Hash
 }
 
 // Internal function used to ensure hash is available and set the default
 // to SHA256
-func ValidateHashFunction(hashFn crypto.Hash) crypto.Hash {
-	if hashFn.Available() {
-		return hashFn
+func ValidateHashFunction(hashInput HashInput) crypto.Hash {
+	if hashInput.HashFn.Available() {
+		return hashInput.HashFn
 	}
+	hashInput.HashFn = crypto.SHA256
 	return crypto.SHA256
 }
 
@@ -26,10 +27,10 @@ func ValidateHashFunction(hashFn crypto.Hash) crypto.Hash {
 // for users to ensure hash values of claims match
 // base64url-safe format
 func HashUtil(input HashInput) (string, error) {
-	hashFn := ValidateHashFunction(input.hashFn)
+	hashFn := ValidateHashFunction(input)
 	hashFnInst := hashFn.HashFunc().New()
 	// helped me here https://forum.golangbridge.org/t/help-with-sha256-code-solved/8210/4
-	firstBytes, err := base64.RawURLEncoding.DecodeString(input.inString)
+	firstBytes, err := base64.RawURLEncoding.DecodeString(input.InString)
 	if err != nil {
 		return "", ErrInputMalformed
 	}

@@ -17,9 +17,9 @@ const (
 func TestHashEquals_CustomCryptoArg(t *testing.T) {
 	// Arrange
 	outString := `fvH592-VGGsVowC30cXqp7JYgkuxlPteYVbMtmbJPx6TPnhMJnpxed8oO4glEyY0`
-	input := new(dpop.HashInput).New(inString)
-	input.SetHashFn(crypto.SHA384)
-
+	input := &dpop.HashInput{}
+	input.HashFn = crypto.SHA384
+	input.InString = inString
 	// Act
 	got, _ := dpop.HashEquals(*input, outString)
 
@@ -32,7 +32,9 @@ func TestHashEquals_CustomCryptoArg(t *testing.T) {
 func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	// Arrange
 	outString := "this is definitely wrong : )"
-	input := new(dpop.HashInput).New(inString)
+	input := &dpop.HashInput{}
+	input.HashFn = crypto.SHA256
+	input.InString = inString
 	
 	// Act
 	got, _ := dpop.HashEquals(*input, outString)
@@ -46,9 +48,11 @@ func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 func TestValidateHashFunction_NoArgs(t *testing.T) {
 	// Arrange
 	want := crypto.SHA256
-
+	input := &dpop.HashInput{}
+	input.InString = inString
+	
 	// Act
-	got := dpop.ValidateHashFunction(crypto.SHA256)
+	got := dpop.ValidateHashFunction(*input)
 
 	// Assert
 	if got != want {
@@ -60,9 +64,12 @@ func TestValidateHashFunction_OneArgs(t *testing.T) {
 
 	// Arrange
 	want := crypto.SHA384
+	input := &dpop.HashInput{}
+	input.HashFn = crypto.SHA384
+	input.InString = inString
 
 	// Act
-	got := dpop.ValidateHashFunction(crypto.SHA384)
+	got := dpop.ValidateHashFunction(*input)
 
 	// Assert
 	if got != want {
@@ -75,8 +82,9 @@ func TestHashUtil_BadInputString(t *testing.T) {
 	// Arrange
 	malformedString := ``
 	want := dpop.ErrInputMalformed
-	input := new(dpop.HashInput).New(malformedString)
-
+	input := &dpop.HashInput{}
+	input.InString = malformedString
+	input.HashFn = crypto.SHA256
 
 	// Act
 	_, err := dpop.HashUtil(*input)
@@ -90,8 +98,9 @@ func TestHashUtil_BadInputString(t *testing.T) {
 func TestHashUtil_CorrectOutput(t *testing.T) {
 	// Arrange
 	want := "Kojtpb4GFK8jVm9Ypu74Ybg0QUbPmZRpNziC88RslUY"
-	input := new(dpop.HashInput).New(inString)
-
+	input := &dpop.HashInput{}
+	input.InString = inString
+	input.HashFn = crypto.SHA256
 	// Act
 	got, _ := dpop.HashUtil(*input)
 
