@@ -65,8 +65,8 @@ func Parse(
 	opts ParseOptions,
 ) (*Proof, error) {
 	// Parse the token string
-	// Ensure that it is a wellformed JWT, that a supported signature algorithm is used,
-	// that it conatins a public key, and that the signature verifies with the public key.
+	// Ensure that it is a well-formed JWT, that a supported signature algorithm is used,
+	// that it contains a public key, and that the signature verifies with the public key.
 	// This satisfies point 2, 5, 6 and 7 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
 	var claims ProofTokenClaims
 	dpopToken, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc)
@@ -124,13 +124,17 @@ func Parse(
 	// Extract the public key from the proof and hash it.
 	// This is done in order to store the public key
 	// without the need for extracting and hashing it again.
-	jwkHeaderJSON, err := json.Marshal(dpopToken.Header["jwk"])
+	jwk, ok := dpopToken.Header["jwk"].(map[string]interface{})
+	if !ok {
+		return nil, ErrMissingJWK
+	}
+	jwkJSONbytes, err := getThumbprintableJwkJSONbytes(jwk)
 	if err != nil {
 		// keyFunc used with parseWithClaims should ensure that this can not happen but better safe than sorry.
 		return nil, errors.Join(ErrInvalidProof, err)
 	}
 	h := sha256.New()
-	_, err = h.Write([]byte(jwkHeaderJSON))
+	_, err = h.Write(jwkJSONbytes)
 	if err != nil {
 		return nil, errors.Join(ErrInvalidProof, err)
 	}
@@ -163,6 +167,11 @@ func keyFunc(t *jwt.Token) (interface{}, error) {
 		return nil, ErrMissingJWK
 	}
 
+	return parseJwk(jwkMap)
+}
+
+// Parses a JWK and inherently strips it of optional fields
+func parseJwk(jwkMap map[string]interface{}) (interface{}, error) {
 	switch jwkMap["kty"].(string) {
 	case "EC":
 		// Decode the coordinates from Base64.
@@ -192,9 +201,9 @@ func keyFunc(t *jwt.Token) (interface{}, error) {
 		}
 
 		return &ecdsa.PublicKey{
-			Curve: curve,
 			X:     big.NewInt(0).SetBytes(xCoordinate),
 			Y:     big.NewInt(0).SetBytes(yCoordinate),
+			Curve: curve,
 		}, nil
 	case "RSA":
 		// Decode the exponent and modulus from Base64.
@@ -239,4 +248,51 @@ func keyFunc(t *jwt.Token) (interface{}, error) {
 func base64urlTrailingPadding(s string) ([]byte, error) {
 	s = strings.TrimRight(s, "=")
 	return base64.RawURLEncoding.DecodeString(s)
+}
+
+// Strips eventual optional members of a JWK in order to be able to compute the thumbprint of it
+// https://datatracker.ietf.org/doc/html/rfc7638#section-3.2
+func getThumbprintableJwkJSONbytes(jwk map[string]interface{}) ([]byte, error) {
+	minimalJwk, err := parseJwk(jwk)
+	if err != nil {
+		return nil, err
+	}
+	jwkHeaderJSONBytes, err := getKeyStringRepresentation(minimalJwk)
+	if err != nil {
+		return nil, err
+	}
+	return jwkHeaderJSONBytes, nil
+}
+
+// Returns the string representation of a key in JSON format.
+func getKeyStringRepresentation(key interface{}) ([]byte, error) {
+	var keyParts interface{}
+	switch key := key.(type) {
+	case *ecdsa.PublicKey:
+		keyParts = map[string]interface{}{
+			"kty": "EC",
+			"crv": key.Curve.Params().Name,
+			"x":   base64.RawURLEncoding.EncodeToString(key.X.Bytes()),
+			"y":   base64.RawURLEncoding.EncodeToString(key.Y.Bytes()),
+		}
+		break
+	case *rsa.PublicKey:
+		keyParts = map[string]interface{}{
+			"kty": "RSA",
+			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(key.E)).Bytes()),
+			"n":   base64.RawURLEncoding.EncodeToString(key.N.Bytes()),
+		}
+		break
+	case ed25519.PublicKey:
+		keyParts = map[string]interface{}{
+			"kty": "OKP",
+			"crv": "Ed25519",
+			"x":   base64.RawURLEncoding.EncodeToString(key),
+		}
+		break
+	default:
+		return nil, ErrUnsupportedKeyAlgorithm
+	}
+	marshalledKey, err := json.Marshal(keyParts)
+	return marshalledKey, err
 }

@@ -19,7 +19,7 @@ const (
 // Test that a valid proof and valid bound token are accepted without error
 func TestValidate_WithValidProofAndBoundAccessToken(t *testing.T) {
 	// Arrange
-	// Create a access token hash
+	// Create an access token hash
 	accessToken := "someToken"
 	h := sha256.New()
 	_, err := h.Write([]byte(accessToken))

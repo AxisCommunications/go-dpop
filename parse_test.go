@@ -1,7 +1,17 @@
 package dpop_test
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"github.com/golang-jwt/jwt/v5"
+	"math/big"
 	"net/url"
 	"testing"
 	"time"
@@ -529,4 +539,222 @@ func TestParse_ProofWithEd25519(t *testing.T) {
 	if proof == nil || proof.Valid != true {
 		t.Errorf("Expected token to be valid")
 	}
+}
+
+func TestParse_ProofWithExtraKeyMembersEC(t *testing.T) {
+	// Arrange
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+
+	tokenClaims := dpop.ProofTokenClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
+			Issuer:    "client",
+			Subject:   "user",
+			Audience:  jwt.ClaimStrings{"https://server.example.com/token"},
+			ID:        "random_id",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+		Method: dpop.POST,
+		URL:    "https://server.example.com/token",
+	}
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host:   "server.example.com",
+		Path:   "/token",
+	}
+
+	// Set an optional member in the key used in the proof, the member should be disregarded in the thubprint
+	jwkWithOptionalParameters := map[string]interface{}{
+		"x":   base64.RawURLEncoding.EncodeToString(privateKey.X.Bytes()),
+		"y":   base64.RawURLEncoding.EncodeToString(privateKey.Y.Bytes()),
+		"ext": true,
+		"crv": privateKey.Curve.Params().Name,
+		"kty": "EC",
+	}
+
+	// Create a copy of the key without the optional member to be able to expect the stripped thumbprint
+	jwkWithoutOptionalParameters := map[string]interface{}{
+		"x":   base64.RawURLEncoding.EncodeToString(privateKey.X.Bytes()),
+		"y":   base64.RawURLEncoding.EncodeToString(privateKey.Y.Bytes()),
+		"crv": privateKey.Curve.Params().Name,
+		"kty": "EC",
+	}
+	token := &jwt.Token{
+		Header: map[string]interface{}{
+			"typ": "dpop+jwt",
+			"alg": jwt.SigningMethodES256.Alg(),
+			"jwk": jwkWithOptionalParameters,
+		},
+		Claims: tokenClaims,
+		Method: jwt.SigningMethodES256,
+	}
+	tokenString, err := token.SignedString(privateKey)
+	minimalKeyJSON, err := json.Marshal(jwkWithoutOptionalParameters)
+	if err != nil {
+		t.Error(err)
+	}
+	h := sha256.New()
+	_, _ = h.Write(minimalKeyJSON)
+	expectedMinimalThumbprint := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+
+	// Act
+	parsedProof, err := dpop.Parse(tokenString, dpop.POST, &httpUrl, dpop.ParseOptions{
+		JKT: expectedMinimalThumbprint,
+	})
+
+	// Assert
+	if err != nil {
+		t.Error("Error when parsing proof", err)
+	}
+	if parsedProof == nil {
+		t.Error("Expected proof to be parsed")
+	}
+
+}
+
+func TestParse_ProofWithExtraKeyMembersRSA(t *testing.T) {
+	// Arrange
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Errorf("Error when generating RSA key: %v", err)
+	}
+
+	tokenClaims := dpop.ProofTokenClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
+			Issuer:    "client",
+			Subject:   "user",
+			Audience:  jwt.ClaimStrings{"https://server.example.com/token"},
+			ID:        "random_id",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+		Method: dpop.POST,
+		URL:    "https://server.example.com/token",
+	}
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host:   "server.example.com",
+		Path:   "/token",
+	}
+
+	// Set an optional member in the key used in the proof, the member should be disregarded in the thubprint
+	jwkWithOptionalParameters := map[string]interface{}{
+		"n":   base64.RawURLEncoding.EncodeToString(rsaKey.N.Bytes()),
+		"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(rsaKey.E)).Bytes()),
+		"ext": true,
+		"kty": "RSA",
+	}
+
+	// Create a copy of the key without the optional member to be able to expect the stripped thumbprint
+	jwkWithoutOptionalParameters := map[string]interface{}{
+		"n":   base64.RawURLEncoding.EncodeToString(rsaKey.N.Bytes()),
+		"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(rsaKey.E)).Bytes()),
+		"kty": "RSA",
+	}
+	token := &jwt.Token{
+		Header: map[string]interface{}{
+			"typ": "dpop+jwt",
+			"alg": jwt.SigningMethodRS512.Alg(),
+			"jwk": jwkWithOptionalParameters,
+		},
+		Claims: tokenClaims,
+		Method: jwt.SigningMethodRS512,
+	}
+	tokenString, err := token.SignedString(rsaKey)
+	minimalKeyJSON, err := json.Marshal(jwkWithoutOptionalParameters)
+	if err != nil {
+		t.Error(err)
+	}
+	h := sha256.New()
+	_, _ = h.Write(minimalKeyJSON)
+	expectedMinimalThumbprint := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+
+	// Act
+	parsedProof, err := dpop.Parse(tokenString, dpop.POST, &httpUrl, dpop.ParseOptions{
+		JKT: expectedMinimalThumbprint,
+	})
+
+	// Assert
+	if err != nil {
+		t.Error("Error when parsing proof", err)
+	}
+	if parsedProof == nil {
+		t.Error("Expected proof to be parsed")
+	}
+
+}
+
+func TestParse_ProofWithExtraKeyMembersOKT(t *testing.T) {
+	// Arrange
+	public, private, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Errorf("Error when generating RSA key: %v", err)
+	}
+
+	tokenClaims := dpop.ProofTokenClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
+			Issuer:    "client",
+			Subject:   "user",
+			Audience:  jwt.ClaimStrings{"https://server.example.com/token"},
+			ID:        "random_id",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+		Method: dpop.POST,
+		URL:    "https://server.example.com/token",
+	}
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host:   "server.example.com",
+		Path:   "/token",
+	}
+
+	// Set an optional member in the key used in the proof, the member should be disregarded in the thubprint
+	jwkWithOptionalParameters := map[string]interface{}{
+		"ext": true,
+		"crv": "Ed25519",
+		"x":   base64.RawURLEncoding.EncodeToString(public),
+		"kty": "OKP",
+	}
+
+	// Create a copy of the key without the optional member to be able to expect the stripped thumbprint
+	jwkWithoutOptionalParameters := map[string]interface{}{
+		"crv": "Ed25519",
+		"x":   base64.RawURLEncoding.EncodeToString(public),
+		"kty": "OKP",
+	}
+	token := &jwt.Token{
+		Header: map[string]interface{}{
+			"typ": "dpop+jwt",
+			"alg": jwt.SigningMethodEdDSA.Alg(),
+			"jwk": jwkWithOptionalParameters,
+		},
+		Claims: tokenClaims,
+		Method: jwt.SigningMethodEdDSA,
+	}
+	tokenString, err := token.SignedString(private)
+	minimalKeyJSON, err := json.Marshal(jwkWithoutOptionalParameters)
+	if err != nil {
+		t.Error(err)
+	}
+	h := sha256.New()
+	_, _ = h.Write(minimalKeyJSON)
+	expectedMinimalThumbprint := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+
+	// Act
+	parsedProof, err := dpop.Parse(tokenString, dpop.POST, &httpUrl, dpop.ParseOptions{
+		JKT: expectedMinimalThumbprint,
+	})
+
+	// Assert
+	if err != nil {
+		t.Error("Error when parsing proof", err)
+	}
+	if parsedProof == nil {
+		t.Error("Expected proof to be parsed")
+	}
+
 }
