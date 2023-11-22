@@ -15,7 +15,7 @@ type HashInput struct {
 
 // Internal function used to ensure hash is available and set the default
 // to SHA256
-func ValidateHashFunction(hashInput HashInput) crypto.Hash {
+func validateHashFunction(hashInput *HashInput) crypto.Hash {
 	if hashInput.HashFn.Available() {
 		return hashInput.HashFn
 	}
@@ -26,8 +26,8 @@ func ValidateHashFunction(hashInput HashInput) crypto.Hash {
 // Utility function to provide a default hashing utility
 // for users to ensure hash values of claims match
 // base64url-safe format
-func HashUtil(input HashInput) (string, error) {
-	hashFn := ValidateHashFunction(input)
+func HashUtil(input *HashInput) (string, error) {
+	hashFn := validateHashFunction(input)
 	hashFnInst := hashFn.HashFunc().New()
 	// helped me here https://forum.golangbridge.org/t/help-with-sha256-code-solved/8210/4
 	firstBytes, err := base64.RawURLEncoding.DecodeString(input.InString)
@@ -42,7 +42,7 @@ func HashUtil(input HashInput) (string, error) {
 
 // Utility function to test the hashing value of an input strng
 // against a provided encrypted string
-func HashEquals(input HashInput, encryptedString string) (bool, error) {
+func HashEquals(input *HashInput, encryptedString string) (bool, error) {
 	hashedInString, err := HashUtil(input)
 	if err != nil {
 		return false, err

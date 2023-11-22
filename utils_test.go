@@ -21,7 +21,7 @@ func TestHashEquals_CustomCryptoArg(t *testing.T) {
 	input.HashFn = crypto.SHA384
 	input.InString = inString
 	// Act
-	got, _ := dpop.HashEquals(*input, outString)
+	got, _ := dpop.HashEquals(input, outString)
 
 	// Assert
 	if got != true {
@@ -37,7 +37,7 @@ func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	input.InString = inString
 	
 	// Act
-	got, _ := dpop.HashEquals(*input, outString)
+	got, _ := dpop.HashEquals(input, outString)
 
 	// Assert
 	if got != false {
@@ -45,38 +45,6 @@ func TestHashEquals_IncorrectEncryptedString(t *testing.T) {
 	}
 }
 
-func TestValidateHashFunction_NoArgs(t *testing.T) {
-	// Arrange
-	want := crypto.SHA256
-	input := &dpop.HashInput{}
-	input.InString = inString
-	
-	// Act
-	got := dpop.ValidateHashFunction(*input)
-
-	// Assert
-	if got != want {
-		t.Errorf("wanted %+v, got %+v", want, got)
-	}
-}
-
-func TestValidateHashFunction_OneArgs(t *testing.T) {
-
-	// Arrange
-	want := crypto.SHA384
-	input := &dpop.HashInput{}
-	input.HashFn = crypto.SHA384
-	input.InString = inString
-
-	// Act
-	got := dpop.ValidateHashFunction(*input)
-
-	// Assert
-	if got != want {
-		t.Errorf("wanted %+v, got %+v", want, got)
-	}
-
-}
 
 func TestHashUtil_BadInputString(t *testing.T) {
 	// Arrange
@@ -87,7 +55,7 @@ func TestHashUtil_BadInputString(t *testing.T) {
 	input.HashFn = crypto.SHA256
 
 	// Act
-	_, err := dpop.HashUtil(*input)
+	_, err := dpop.HashUtil(input)
 
 	// Assert
 	if want != err {
@@ -102,7 +70,7 @@ func TestHashUtil_CorrectOutput(t *testing.T) {
 	input.InString = inString
 	input.HashFn = crypto.SHA256
 	// Act
-	got, _ := dpop.HashUtil(*input)
+	got, _ := dpop.HashUtil(input)
 
 	if got != want {
 		t.Errorf("wanted %s, got %s", want, got)
