@@ -28,6 +28,12 @@ var (
 	// The proof is issued too far into the future.
 	ErrFuture = errors.New("proof is issued too far into the future")
 
+	// The hash function is not available
+	ErrHashFnNotAvailable = errors.New("provided hash function is not available, please check binaries and linker")
+
+	// Input string was malformed, and could not be decoded
+	ErrInputMalformed = errors.New("input string was malformed, could not be decoded")
+
 	// The proof claims are not of correct type
 	ErrIncorrectClaimsType = errors.New("incorrect claims type")
 
