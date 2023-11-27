@@ -54,7 +54,7 @@ type ParseOptions struct {
 }
 
 // Parse translates a DPoP proof string into a JWT token and parses it with the jwt package (github.com/golang-jwt/jwt/v5).
-// It will also validate the proof according to https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+// It will also validate the proof according to https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 // but not check whether the proof matches a bound access token. It also assumes point 1 is checked by the calling application.
 //
 // Protected resources should use the 'Validate' function on the returned proof to ensure that the proof matches any bound access token.
@@ -67,7 +67,7 @@ func Parse(
 	// Parse the token string
 	// Ensure that it is a well-formed JWT, that a supported signature algorithm is used,
 	// that it contains a public key, and that the signature verifies with the public key.
-	// This satisfies point 2, 5, 6 and 7 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+	// This satisfies point 2, 5, 6 and 7 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	var claims ProofTokenClaims
 	dpopToken, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc)
 	if err != nil {
@@ -75,32 +75,36 @@ func Parse(
 	}
 
 	// Check that all claims have been populated
-	// This satisfies point 3 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+	// This satisfies point 3 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	if claims.Method == "" || claims.URL == "" || claims.ID == "" || claims.IssuedAt == nil {
 		return nil, errors.Join(ErrInvalidProof, ErrMissingClaims)
 	}
 
 	// Check `typ` JOSE header that it is correct
-	// This satisfies point 4 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+	// This satisfies point 4 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	typeHeader := dpopToken.Header["typ"]
 	if typeHeader == nil || typeHeader.(string) != "dpop+jwt" {
 		return nil, errors.Join(ErrInvalidProof, ErrUnsupportedJWTType)
 	}
 
+	// Strip the incoming URI of query and fragment according to point 9 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
+	httpURL.RawQuery = ""
+	httpURL.Fragment = ""
+
 	// Check that `htm` and `htu` claims match the HTTP method and URL of the current request.
-	// This satisfies point 8 and 9 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+	// This satisfies point 8 and 9 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	if httpMethod != claims.Method || httpURL.String() != claims.URL {
 		return nil, errors.Join(ErrInvalidProof, ErrIncorrectHTTPTarget)
 	}
 
 	// Check that `nonce` is correct
-	// This satisfies point 10 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+	// This satisfies point 10 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	if opts.Nonce != "" && opts.Nonce != claims.Nonce {
 		return nil, ErrIncorrectNonce
 	}
 
 	// Check that `iat` is within the acceptable window unless `nonce` contains a server managed timestamp.
-	// This satisfies point 11 in https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.3
+	// This satisfies point 11 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	if !opts.NonceHasTimestamp {
 		// Check that `iat` is not too far into the past.
 		past := DEFAULT_TIME_WINDOW
@@ -141,7 +145,7 @@ func Parse(
 	b64URLjwkHash := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
 
 	// Check that `dpop_jkt` is correct if supplied to the authorization server on token request.
-	// This satisfies https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#name-authorization-code-binding-
+	// This satisfies https://datatracker.ietf.org/doc/html/rfc9449#name-authorization-code-binding-
 	if opts.JKT != "" {
 		if b64URLjwkHash != opts.JKT {
 			return nil, errors.Join(ErrInvalidProof, ErrIncorrectJKT)
@@ -155,7 +159,7 @@ func Parse(
 }
 
 func keyFunc(t *jwt.Token) (interface{}, error) {
-	// Return the required jwkHeader header. See https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop#section-4.2
+	// Return the required jwkHeader header. See https://datatracker.ietf.org/doc/html/rfc9449#section-4.2
 	// Used to validate the signature of the DPoP proof.
 	jwkHeader := t.Header["jwk"]
 	if jwkHeader == nil {
@@ -275,24 +279,21 @@ func getKeyStringRepresentation(key interface{}) ([]byte, error) {
 			"x":   base64.RawURLEncoding.EncodeToString(key.X.Bytes()),
 			"y":   base64.RawURLEncoding.EncodeToString(key.Y.Bytes()),
 		}
-		break
 	case *rsa.PublicKey:
 		keyParts = map[string]interface{}{
 			"kty": "RSA",
 			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(key.E)).Bytes()),
 			"n":   base64.RawURLEncoding.EncodeToString(key.N.Bytes()),
 		}
-		break
 	case ed25519.PublicKey:
 		keyParts = map[string]interface{}{
 			"kty": "OKP",
 			"crv": "Ed25519",
 			"x":   base64.RawURLEncoding.EncodeToString(key),
 		}
-		break
 	default:
 		return nil, ErrUnsupportedKeyAlgorithm
 	}
-	marshalledKey, err := json.Marshal(keyParts)
-	return marshalledKey, err
+
+	return json.Marshal(keyParts)
 }
