@@ -10,13 +10,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"math/big"
 	"net/url"
 	"testing"
 	"time"
 
 	"github.com/AxisCommunications/go-dpop"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // All proofs used in tests have been generated through the use of <https://github.com/panva/dpop>
@@ -250,6 +250,31 @@ func TestParse_IncorrectHtu(t *testing.T) {
 	}
 	if proof != nil {
 		t.Errorf("Expected nil token")
+	}
+}
+
+func TestParse_HtuWithQueryAndFragment(t *testing.T) {
+	// Arrange
+	httpUrl, err := url.Parse("https://server.example.com/token?query=true#x/y%2Fz")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	duration := time.Duration(438000) * time.Hour
+	opts := dpop.ParseOptions{
+		Nonce:      "",
+		TimeWindow: &duration,
+		JKT:        "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+	}
+
+	// Act
+	proof, err := dpop.Parse(validES256_proof, dpop.POST, httpUrl, opts)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if proof == nil || proof.Valid != true {
+		t.Errorf("Expected token to be valid")
 	}
 }
 
@@ -592,6 +617,9 @@ func TestParse_ProofWithExtraKeyMembersEC(t *testing.T) {
 		Method: jwt.SigningMethodES256,
 	}
 	tokenString, err := token.SignedString(privateKey)
+	if err != nil {
+		t.Error(err)
+	}
 	minimalKeyJSON, err := json.Marshal(jwkWithoutOptionalParameters)
 	if err != nil {
 		t.Error(err)
@@ -664,6 +692,9 @@ func TestParse_ProofWithExtraKeyMembersRSA(t *testing.T) {
 		Method: jwt.SigningMethodRS512,
 	}
 	tokenString, err := token.SignedString(rsaKey)
+	if err != nil {
+		t.Error(err)
+	}
 	minimalKeyJSON, err := json.Marshal(jwkWithoutOptionalParameters)
 	if err != nil {
 		t.Error(err)
@@ -736,6 +767,9 @@ func TestParse_ProofWithExtraKeyMembersOKT(t *testing.T) {
 		Method: jwt.SigningMethodEdDSA,
 	}
 	tokenString, err := token.SignedString(private)
+	if err != nil {
+		t.Error(err)
+	}
 	minimalKeyJSON, err := json.Marshal(jwkWithoutOptionalParameters)
 	if err != nil {
 		t.Error(err)
