@@ -3,10 +3,9 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/AxisCommunications/go-dpop.svg)](https://pkg.go.dev/github.com/AxisCommunications/go-dpop)
 [![Coverage Status](https://badge.coveralls.io/repos/github/AxisCommunications/go-dpop/badge.svg?branch=main)](https://badge.coveralls.io/github/AxisCommunications/go-dpop?branch=main)
 
-OAuth 2.0 Demonstration of Proof-of-Possession at the Application Layer (DPoP)
+OAuth 2.0 Demonstrating Proof of Possession (DPoP)
 
-This package tries to implement the current DPoP draft from IETF
-[dpop-draft-version-16](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop)
+This package tries to implement [RFC-9449](https://datatracker.ietf.org/doc/html/rfc9449)
 
 ## Supported key algorithms
 
@@ -63,7 +62,7 @@ if err != nil {
 
 // Hash the token with base64 and SHA256
 // Get the access token JWT (introspect if needed)
-// Parse the access token JWT and verify the its signature
+// Parse the access token JWT and verify the signature
 
 err = proof.Validate(accessTokenHash, accessTokenJWT)
 // Check the error type to determine response
