@@ -41,11 +41,11 @@ type ParseOptions struct {
 	// The expected nonce if the authorization server has issued a nonce.
 	Nonce string
 
-	// Used to control if the `iat` field is used to control the proof age.
+	// Used to control if the `iat` field is within allowed clock-skew.
 	// If set to true the authorization server has to validate the nonce timestamp itself.
 	NonceHasTimestamp bool
 
-	// The allowed age of the proof. Defaults to 1 minute if not specified.
+	// The allowed clock-skew on the `iat` of the proof. Defaults to 1 minute if not specified.
 	TimeWindow *time.Duration
 
 	// dpop_jkt parameter that is optionally sent by the client to the authorization server on token request.
