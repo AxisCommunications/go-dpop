@@ -34,7 +34,8 @@ const (
 	CONNECT HTTPVerb = "CONNECT"
 )
 
-const DEFAULT_TIME_WINDOW = time.Second * 30
+const DEFAULT_ALLOWED_PROOF_AGE = time.Minute * 5
+const DEFAULT_ALLOWED_TIME_WINDOW = time.Second * 0
 
 // ParseOptions and its contents are optional for the Parse function.
 type ParseOptions struct {
@@ -45,8 +46,11 @@ type ParseOptions struct {
 	// If set to true the authorization server has to validate the nonce timestamp itself.
 	NonceHasTimestamp bool
 
-	// The allowed clock-skew on the `iat` of the proof. Defaults to 1 minute if not specified.
+	// The allowed clock-skew (into the future) on the `iat` of the proof. If not set proof is rejected if issued in the future.
 	TimeWindow *time.Duration
+
+	// The allowed age of a proof. If not set the default is 5 minutes.
+	AllowedProofAge *time.Duration
 
 	// dpop_jkt parameter that is optionally sent by the client to the authorization server on token request.
 	// If set the proof proof-of-possession public key needs to match or the proof is rejected.
@@ -107,16 +111,16 @@ func Parse(
 	// This satisfies point 11 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
 	if !opts.NonceHasTimestamp {
 		// Check that `iat` is not too far into the past.
-		past := DEFAULT_TIME_WINDOW
-		if opts.TimeWindow != nil {
-			past = *opts.TimeWindow
+		past := DEFAULT_ALLOWED_PROOF_AGE
+		if opts.AllowedProofAge != nil {
+			past = *opts.AllowedProofAge
 		}
 		if claims.IssuedAt.Before(time.Now().Add(-past)) {
 			return nil, errors.Join(ErrInvalidProof, ErrExpired)
 		}
 
 		// Check that `iat` is not too far into the future.
-		future := DEFAULT_TIME_WINDOW
+		future := DEFAULT_ALLOWED_TIME_WINDOW
 		if opts.TimeWindow != nil {
 			future = *opts.TimeWindow
 		}
@@ -130,6 +134,7 @@ func Parse(
 	// without the need for extracting and hashing it again.
 	jwk, ok := dpopToken.Header["jwk"].(map[string]interface{})
 	if !ok {
+		// keyFunc used with parseWithClaims should ensure that this can not happen but better safe than sorry.
 		return nil, ErrMissingJWK
 	}
 	jwkJSONbytes, err := getThumbprintableJwkJSONbytes(jwk)
