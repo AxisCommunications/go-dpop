@@ -109,6 +109,21 @@ func TestParse_MissingJWKHeader(t *testing.T) {
 	}
 }
 
+func TestNoRegisteredClaims(t *testing.T) {
+	tokenString := "eyJhbGciOiJSUzI1NiIsImp3ayI6eyJlIjoiQVFBQiIsIm4iOiIwRDhoZXV0NEo1SFdYUHFYTHl2T21zaU5hVFNhVFhPZmkxanBUV2JHTWs4bElQaXBqVXBxcjAtQ0pVT2drNEs0bW9naGUxX1FJTjFqbFBWZVg3WXh2UzNiYjRXMFh1bzZLOEFjREFKSjlIZE1PVWtHdGdiSEcxTkloTEVoR1NJMjZWcU52cjN5VXJqSG1qSHJIc1o1MUZYTVBiU09DZWdqVHlnOGtJVWtxbUNEUTB4ek42WlVQVzhocHNyWU10SlBtZ1N5U0lRaWlYWnFUYUF1UTdhdHJxWGF1dU1SSFQyMWlta2h6UE9SbFl2SkhwWk1rdkhkbjVqNlpOVlBoLVE1MEZ4QkdKRmRkZEtmM05xbW9nWG9td0dLSzZvV042S1pIU2ZuM2tuUjNieW1abWZvMHdEeUVTQ1dtQzI2RGx0ejRlTXdyTTU2VWNPNUNpWlBRWm1ZclEiLCJrdHkiOiJSU0EifSwidHlwIjoiZHBvcCtqd3QifQ.eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9teXVybC5jb20vd2hhdGV2ZXIifQ.mKo299nmZG1eCGRIf-CWXqrSTGO3vRUdvSAOHGsejw3COAHuGNfWq8hPLQ2iR4QI1UQkR0g95HsTbAEeWSZ9TSBzl5aLN0QO-fQUfs0l3ohW7wyQF-yJ9aMZjCMBUPP6kD7MPaJqwD_E1EQr6RHHQrCOR60BjZSQEiteiWocMPl-jJpN-OgsmPe9fy3hOaaf0oX2CUiwUJW9sIsVIwkMK6NE9sJMMsE6P-qUhgBki_sK1TOK7xT9AMaihybYHM4gkBswi4gFTwIdCQtd7Nl_MVIliAxJrc5HwuBZeL-DLzK7yZlpovJAlrrhnE1FP6RwmthiGPktEqwITAVabMkBrA"
+
+	u, _ := url.Parse("https://myurl.com/whatever")
+	_, err := dpop.Parse(tokenString, dpop.POST, u, dpop.ParseOptions{})
+
+	if err == nil {
+		t.Fatalf("Expected an error but did not get one.")
+	}
+
+	if !errors.Is(err, dpop.ErrMissingClaims) {
+		t.Fatalf("Expected %q error but got %q", dpop.ErrMissingClaims, err)
+	}
+}
+
 // Test that missing claims are rejected
 func TestParse_MissingClaims(t *testing.T) {
 	// Act
