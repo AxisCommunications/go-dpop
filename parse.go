@@ -72,7 +72,7 @@ func Parse(
 	// Ensure that it is a well-formed JWT, that a supported signature algorithm is used,
 	// that it contains a public key, and that the signature verifies with the public key.
 	// This satisfies point 2, 5, 6 and 7 in https://datatracker.ietf.org/doc/html/rfc9449#section-4.3
-	var claims ProofTokenClaims
+	claims := ProofTokenClaims{RegisteredClaims: &jwt.RegisteredClaims{}}
 	dpopToken, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc)
 	if err != nil {
 		return nil, errors.Join(ErrInvalidProof, err)
