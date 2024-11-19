@@ -100,8 +100,8 @@ func TestValidate_WithParsedProof(t *testing.T) {
 	}
 	duration := time.Duration(438000) * time.Hour
 	opts := dpop.ParseOptions{
-		Nonce:      "",
-		TimeWindow: &duration,
+		Nonce:           "",
+		AllowedProofAge: &duration,
 	}
 	proof, err := dpop.Parse(validProof, dpop.POST, &httpUrl, opts)
 	if err != nil {
