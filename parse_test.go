@@ -844,8 +844,9 @@ func TestParse_ProofWithLeadingZeroesEC(t *testing.T) {
 	}
 	duration := time.Duration(438000) * time.Hour
 	opts := dpop.ParseOptions{
-		Nonce:      "",
-		TimeWindow: &duration,
+		Nonce:           "",
+		TimeWindow:      &duration,
+		AllowedProofAge: &duration,
 	}
 
 	// Act
