@@ -278,11 +278,16 @@ func getKeyStringRepresentation(key interface{}) ([]byte, error) {
 	var keyParts interface{}
 	switch key := key.(type) {
 	case *ecdsa.PublicKey:
+		// Calculate the size of the byte array representation of an elliptic curve coordinate
+		// and ensure that the byte array representation of the key is padded correctly.
+		bits := key.Curve.Params().BitSize
+		keyCurveBytesSize := bits/8 + bits%8
+
 		keyParts = map[string]interface{}{
 			"kty": "EC",
 			"crv": key.Curve.Params().Name,
-			"x":   base64.RawURLEncoding.EncodeToString(key.X.Bytes()),
-			"y":   base64.RawURLEncoding.EncodeToString(key.Y.Bytes()),
+			"x":   base64.RawURLEncoding.EncodeToString(key.X.FillBytes(make([]byte, keyCurveBytesSize))),
+			"y":   base64.RawURLEncoding.EncodeToString(key.Y.FillBytes(make([]byte, keyCurveBytesSize))),
 		}
 	case *rsa.PublicKey:
 		keyParts = map[string]interface{}{

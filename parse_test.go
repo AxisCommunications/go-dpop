@@ -37,6 +37,9 @@ const (
 	missingJWKHeader_proof     = "eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0In0.eyJpYXQiOjE2ODYxNDc4MzMsImp0aSI6IlRIaF82Sml3RWNFMEk4NFVGMVNPX3hOc09IY2pld29WcVpHUHhodmcycUUiLCJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9zZXJ2ZXIuZXhhbXBsZS5jb20vdG9rZW4ifQ.XlZ2VbVx4qPwuuJrUHTZG5Bm7KKRGjwcdWBWuOiYdrdvEIR3W62bB2xqI9QqSU6XoyjTlb6DfY1865UDnGzbQA"
 	// Currently signed by a OCT alg, needs to be changed once OCP is supported
 	unsupportedKeyAlg_proof = "eyJhbGciOiJIUzI1NiIsInR5cCI6ImRwb3Arand0IiwiandrIjp7Imt0eSI6Im9jdCIsImtpZCI6IjBhZmVlMTQyLWEwYWYtNDQxMC1hYmNjLTlmMmQ0NGZmNDViNSIsImFsZyI6IkhTMjU2IiwiayI6IkZkRllGekVSd0MydUNCQjQ2cFpRaTRHRzg1THVqUjhvYnQtS1dSQklDVlEifX0.eyJpYXQiOjE4OTM0NTI0MDAsImp0aSI6IlZ2cTdTMTZBUUwwVEkzdWZiSWFabEtYS0FkdjU0dkVhQ3JyVjJUa0lBbDQiLCJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cHM6Ly9zZXJ2ZXIuZXhhbXBsZS5jb20vdG9rZW4ifQ.UEIBBDOkv_NberiIX0w4TiHnwOCQ5XXXidXdyv8JjpA"
+
+	validES256LeadingZeroes_proof = "eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0IiwiandrIjp7Imt0eSI6IkVDIiwieCI6IkFCYjNFYXJRMEhMY2NGeUZtVC1TZUw0TktnMTdQZThzeENaZVlFbG1EVG8iLCJ5IjoiNWtIUWh6ZThWN2ZIdE1tYk82N0tiQ3NOdFRWaERPRlpUTTBZV3RTZUZFOCIsImNydiI6IlAtMjU2In19.eyJpYXQiOjE3MzIwODc2MDYsImp0aSI6IjJmYWJhYTYxLWU1MWEtNGNjYy05ZjA0LTg1NjRkMzA1N2UxMCIsImh0bSI6IlBPU1QiLCJodHUiOiJodHRwczovL3NlcnZlci5leGFtcGxlLmNvbS90b2tlbiIsImF0aCI6IlR0aDhubVZaT09UbVhqRDZDQkl5YVhOQ1pzb3hlUWdxNFZpaEdQTnNMdXMifQ.8RygRxPPK5M3gxtqarXCTvSBt5djhZ0b_0JD5U1ZwmCUflSk7nt5g_ilkWDZf2xflWuZhgeIFvkuazaLSKJuXw"
+	validES256LeadingZeroes_ath   = "MEhdRysfC6YMBxMtlBzyLwTWHmLLusOkEh_ofH9GPjs"
 )
 
 // Test that a malformed tokenString is rejected
@@ -830,4 +833,33 @@ func TestParse_ProofWithExtraKeyMembersOKT(t *testing.T) {
 		t.Error("Expected proof to be parsed")
 	}
 
+}
+
+func TestParse_ProofWithLeadingZeroesEC(t *testing.T) {
+	// Arrange
+	httpUrl := url.URL{
+		Scheme: "https",
+		Host:   "server.example.com",
+		Path:   "/token",
+	}
+	duration := time.Duration(438000) * time.Hour
+	opts := dpop.ParseOptions{
+		Nonce:      "",
+		TimeWindow: &duration,
+	}
+
+	// Act
+	proof, err := dpop.Parse(validES256LeadingZeroes_proof, dpop.POST, &httpUrl, opts)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if proof == nil || proof.Valid != true {
+		t.Errorf("Expected token to be valid")
+	}
+
+	if proof.HashedPublicKey != validES256LeadingZeroes_ath {
+		t.Errorf("Expected hashed public key to be %v, got %v", validES256LeadingZeroes_ath, proof.HashedPublicKey)
+	}
 }
