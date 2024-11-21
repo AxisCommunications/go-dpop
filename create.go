@@ -54,9 +54,14 @@ type ed25519JWK struct {
 func reflect(v interface{}) (interface{}, error) {
 	switch v := v.(type) {
 	case *ecdsa.PublicKey:
+		// Calculate the size of the byte array representation of an elliptic curve coordinate
+		// and ensure that the byte array representation of the key is padded correctly.
+		bits := v.Curve.Params().BitSize
+		keyCurveBytesSize := bits/8 + bits%8
+
 		return &ecdsaJWK{
-			X:   base64.RawURLEncoding.EncodeToString(v.X.Bytes()),
-			Y:   base64.RawURLEncoding.EncodeToString(v.Y.Bytes()),
+			X:   base64.RawURLEncoding.EncodeToString(v.X.FillBytes(make([]byte, keyCurveBytesSize))),
+			Y:   base64.RawURLEncoding.EncodeToString(v.Y.FillBytes(make([]byte, keyCurveBytesSize))),
 			Crv: v.Curve.Params().Name,
 			Kty: "EC",
 		}, nil
