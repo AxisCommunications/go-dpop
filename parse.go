@@ -181,24 +181,43 @@ func keyFunc(t *jwt.Token) (interface{}, error) {
 
 // Parses a JWK and inherently strips it of optional fields
 func parseJwk(jwkMap map[string]interface{}) (interface{}, error) {
-	switch jwkMap["kty"].(string) {
+	// Ensure that JWK kty is present and is a string.
+	kty, ok := jwkMap["kty"].(string)
+	if !ok {
+		return nil, ErrInvalidProof
+	}
+	switch kty {
 	case "EC":
+		// Ensure that the required fields are present and are strings.
+		x, ok := jwkMap["x"].(string)
+		if !ok {
+			return nil, ErrInvalidProof
+		}
+		y, ok := jwkMap["y"].(string)
+		if !ok {
+			return nil, ErrInvalidProof
+		}
+		crv, ok := jwkMap["crv"].(string)
+		if !ok {
+			return nil, ErrInvalidProof
+		}
+
 		// Decode the coordinates from Base64.
 		//
 		// According to RFC 7518, they are Base64 URL unsigned integers.
 		// https://tools.ietf.org/html/rfc7518#section-6.3
-		xCoordinate, err := base64urlTrailingPadding(jwkMap["x"].(string))
+		xCoordinate, err := base64urlTrailingPadding(x)
 		if err != nil {
 			return nil, err
 		}
-		yCoordinate, err := base64urlTrailingPadding(jwkMap["y"].(string))
+		yCoordinate, err := base64urlTrailingPadding(y)
 		if err != nil {
 			return nil, err
 		}
 
 		// Read the specified curve of the key.
 		var curve elliptic.Curve
-		switch jwkMap["crv"].(string) {
+		switch crv {
 		case "P-256":
 			curve = elliptic.P256()
 		case "P-384":
@@ -215,15 +234,25 @@ func parseJwk(jwkMap map[string]interface{}) (interface{}, error) {
 			Curve: curve,
 		}, nil
 	case "RSA":
+		// Ensure that the required fields are present and are strings.
+		e, ok := jwkMap["e"].(string)
+		if !ok {
+			return nil, ErrInvalidProof
+		}
+		n, ok := jwkMap["n"].(string)
+		if !ok {
+			return nil, ErrInvalidProof
+		}
+
 		// Decode the exponent and modulus from Base64.
 		//
 		// According to RFC 7518, they are Base64 URL unsigned integers.
 		// https://tools.ietf.org/html/rfc7518#section-6.3
-		exponent, err := base64urlTrailingPadding(jwkMap["e"].(string))
+		exponent, err := base64urlTrailingPadding(e)
 		if err != nil {
 			return nil, err
 		}
-		modulus, err := base64urlTrailingPadding(jwkMap["n"].(string))
+		modulus, err := base64urlTrailingPadding(n)
 		if err != nil {
 			return nil, err
 		}
@@ -232,7 +261,13 @@ func parseJwk(jwkMap map[string]interface{}) (interface{}, error) {
 			E: int(big.NewInt(0).SetBytes(exponent).Uint64()),
 		}, nil
 	case "OKP":
-		publicKey, err := base64urlTrailingPadding(jwkMap["x"].(string))
+		// Ensure that the required fields are present and are strings.
+		x, ok := jwkMap["x"].(string)
+		if !ok {
+			return nil, ErrInvalidProof
+		}
+
+		publicKey, err := base64urlTrailingPadding(x)
 		if err != nil {
 			return nil, err
 		}
